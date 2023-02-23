@@ -1,0 +1,11 @@
+fire
+huggingface_hub
+numpy
+omegaconf
+Pillow
+python-dotenv
+pytorch_lightning
+setuptools
+torch
+torchaudio
+torchvision

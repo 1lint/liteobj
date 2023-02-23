@@ -1,0 +1,54 @@
+
+# example configuration for pl basic-gan tutorial
+# https://pytorch-lightning.readthedocs.io/en/stable/notebooks/lightning_examples/basic-gan.html
+
+globals:
+  PATH_DATASETS: './data'
+  BATCH_SIZE: 256 
+  NUM_WORKERS: 1 
+
+target: basic_gan.lab.Lab
+params:
+  name: basic_gan
+  log_directory: ./logs
+  ckpt_path: auto
+  state_dict_path: null
+object_params:
+  datamodule:
+    target: basic_gan.mnist_data.MNISTDataModule
+    params:
+      data_dir: ${globals.PATH_DATASETS}
+      batch_size: ${globals.BATCH_SIZE}
+      num_workers: ${globals.NUM_WORKERS}
+
+  model:
+    target: basic_gan.pl_module.GAN
+    params:
+      channels: 1
+      width: 28
+      height: 28
+      batch_size: ${globals.BATCH_SIZE}
+
+  trainer:
+    target: pytorch_lightning.Trainer
+    params:
+      accelerator: auto
+      devices: 1
+      max_epochs: 5
+      enable_checkpointing: True
+    object_params:
+      logger: 
+        target: pytorch_lightning.loggers.TensorBoardLogger
+        params:
+          save_dir: ${params.log_directory}
+          name: ${params.name}
+      callbacks:
+        target: pytorch_lightning.callbacks.progress.TQDMProgressBar
+        params:
+          refresh_rate: 20
+
+
+
+
+
+
