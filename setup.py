@@ -7,7 +7,7 @@ requirements_fn = "requirements.txt"
 install_requirements = open(f"{repo_name}/{requirements_fn}").read().split()
 
 setup(name=repo_name,
-      version='0.0.2',
+      version='0.0.3',
       description='Create lightweight configs for instantiating ML experiments',
       author='1lint',
       author_email='105617163+1lint@users.noreply.github.com',

@@ -1,2 +1,2 @@
-fire
-omegaconf
+fire>=0.4.0
+omegaconf>=2.2.3
