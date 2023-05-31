@@ -1,9 +1,8 @@
 from importlib import import_module
 from fire import Fire
 from omegaconf import OmegaConf, DictConfig
-from typing import Any
+from typing import Any, List
 import sys
-import os
 from time import time
 from pathlib import Path
 
@@ -16,30 +15,12 @@ METHOD_KEY = 'method'
 
 METADATA_KEY = 'lite_metadata'
 
-
-# compile function source and assign object to target_name
-def compile_callable(source, target_name=None):
-
-    ldict = {}
-    exec(source, globals(), ldict)
-
-    if target_name:
-        return ldict[target_name]
-    else:
-        for v in ldict.values():
-            if callable(v):
-                return v
-
 # pack args and kwargs into a list
-def listify(*args, **kwargs):
+def listify(*args, **kwargs) -> List:
     return [*args, *kwargs.values()]
 
-# computes class_string for class object
-def get_class_string(_class):
-    return f'{_class.__module__}.{_class.__name__}'
-
 # recursively load config with superconfigs
-def load_config(yaml_file: str) -> DictConfig:
+def load_config(yaml_file: str|Path) -> DictConfig:
 
     config = OmegaConf.load(yaml_file)
 
@@ -60,34 +41,35 @@ def instantiate(config: OmegaConf) -> Any:
     
     module_name, class_name = class_string.rsplit(".", 1)
     module = import_module(module_name)
-    module_class = getattr(module, class_name)
+    module_attribute = getattr(module, class_name)
+
+    method_string = config.get(METHOD_KEY, "")
+    if method_string is None:
+        return module_attribute
 
     kwargs = {}
     if KWARGS in config:
         for k, v in config[KWARGS].items():
-            kwargs[k] = instantiate(v) if isinstance(config[KWARGS][k], DictConfig) else v
+            kwargs[k] = instantiate(v) if hasattr(v, CLASS_STRING) else v
  
     args = []
     if ARGS in config:
         for item in config[ARGS]:
-            args.append(instantiate(item)) if isinstance(item, DictConfig) else args.append(item)
+            item = instantiate(item) if hasattr(item, CLASS_STRING) else item
+            args.append(item)
 
-
-    # allow custom instantiation method
-    method_string = config.get(METHOD_KEY, '__init__')
-    if method_string is None:
-        return module_class
-
-    # have to invoke __init__ method as special case due to nuances of python compiler
-    if method_string == '__init__':
-        return module_class(*args, **kwargs)
+    if method_string == "":
+        return module_attribute(*args, **kwargs)
     else:
-        method = getattr(module_class, method_string)
+        method = getattr(module_attribute, method_string)
         return method(*args, **kwargs)
 
 # convenience method for running object from yaml
-def run(yaml_file: str, method_string: str=None, *args, **kwargs) -> Any:
-    sys.path.append(os.getcwd()) 
+def run(yaml_file: str|Path, method_string: str=None, *args, **kwargs) -> Any:
+
+    yaml_file = Path(yaml_file)
+    sys.path.append(str(Path.cwd()))
+    sys.path.append(str(yaml_file.parent.resolve()))
 
     config = load_config(yaml_file)
 
