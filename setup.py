@@ -1,13 +1,19 @@
 
 from setuptools import setup
-from version import __version__
 
 repo_name = 'liteobj'
+
+__version__ = None
+with open(f"{repo_name}/__init__.py", "r") as f:
+    version_statement = f.readline()
+
+exec(version_statement)
 
 requirements_fn = "requirements.txt"
 install_requirements = open(f"{repo_name}/{requirements_fn}").read().split()
 
-setup(name=repo_name,
+setup(
+      name=repo_name,
       version=__version__,
       description='Create lightweight configs for instantiating ML experiments',
       author='1lint',
@@ -21,6 +27,5 @@ setup(name=repo_name,
                   "lite = liteobj:main"
             ]
       },
-      scripts=["version.py"]
 )
 
