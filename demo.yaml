@@ -1,33 +1,38 @@
 lite_metadata:
-  gradio_version: 3.31.0
+  gradio_version: 3.32.0
 class_string: gradio.interface.Interface
 kwargs:
-  title: Gradio Webapp made with Gitio
-  description: Given a string s, find the length of the longest substring without
-    repeating characters.
+  title: Gradio Webapp
+  description: given two numbers, return the sum
   article: null
   thumbnail: null
   theme: gradio/seafoam
   css: null
+  allow_flagging: never
   inputs:
-    class_string: liteobj.listify
-    args:
-    - class_string: gradio.components.Textbox
-      kwargs:
-        label: s
-  outputs:
-    class_string: liteobj.listify
-    args:
-    - class_string: gradio.components.Number
-      kwargs:
-        label: output
-        precision: 0
-  fn:
-    class_string: liteobj.compile_callable
+  - class_string: gradio.components.Number
     kwargs:
-      source: "def func(s):\n    start = maxLength = 0\n    usedChar = {}\n    for\
-        \ i in range(len(s)):\n        if s[i] in usedChar and start <= usedChar[s[i]]:\n\
-        \            start = usedChar[s[i]] + 1\n        else:\n            maxLength\
-        \ = max(maxLength, i - start + 1)\n        usedChar[s[i]] = i\n    return\
-        \ maxLength\n"
-      target_name: func
+      label: num1
+      precision: 0
+  - class_string: gradio.components.Number
+    kwargs:
+      label: num2
+      precision: 0
+  outputs:
+  - class_string: gradio.components.Number
+    kwargs:
+      label: output
+      precision: 0
+  fn:
+    class_string: gradify.gradify_closure
+    kwargs:
+      argmaps:
+      - label: num1
+        postprocessing: null
+      - label: num2
+        postprocessing: null
+      func_kwargs: {}
+      ldict:
+        class_string: gradify.exec_to_dict
+        kwargs:
+          source: "def sum_numbers(num1, num2):\n    return num1 + num2\n"

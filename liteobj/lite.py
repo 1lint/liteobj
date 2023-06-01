@@ -1,7 +1,7 @@
 from importlib import import_module
 from fire import Fire
-from omegaconf import OmegaConf, DictConfig
-from typing import Any, List
+from omegaconf import OmegaConf, DictConfig, ListConfig
+from typing import Any
 import sys
 from time import time
 from pathlib import Path
@@ -15,10 +15,6 @@ METHOD_KEY = 'method'
 
 METADATA_KEY = 'lite_metadata'
 
-# pack args and kwargs into a list
-def listify(*args, **kwargs) -> List:
-    return [*args, *kwargs.values()]
-
 # recursively load config with superconfigs
 def load_config(yaml_file: str|Path) -> DictConfig:
 
@@ -31,6 +27,19 @@ def load_config(yaml_file: str|Path) -> DictConfig:
         config = OmegaConf.unsafe_merge(*super_configs, config)
         
     return config
+
+def process_param(param):
+    
+    if isinstance(param, ListConfig):
+        output_list = []
+        for element in param:
+            element = process_param(element)
+            output_list.append(element)
+        return output_list
+    else:
+        param = instantiate(param) if hasattr(param, CLASS_STRING) else param
+        return param
+
 
 # recursively instantiate objects that have objects as parameters
 def instantiate(config: OmegaConf) -> Any:
@@ -50,13 +59,12 @@ def instantiate(config: OmegaConf) -> Any:
     kwargs = {}
     if KWARGS in config:
         for k, v in config[KWARGS].items():
-            kwargs[k] = instantiate(v) if hasattr(v, CLASS_STRING) else v
+            kwargs[k] = process_param(v)
  
     args = []
     if ARGS in config:
         for item in config[ARGS]:
-            item = instantiate(item) if hasattr(item, CLASS_STRING) else item
-            args.append(item)
+            args.append(process_param(item))
 
     if method_string == "":
         return module_attribute(*args, **kwargs)
@@ -65,7 +73,7 @@ def instantiate(config: OmegaConf) -> Any:
         return method(*args, **kwargs)
 
 # convenience method for running object from yaml
-def run(yaml_file: str|Path, method_string: str=None, *args, **kwargs) -> Any:
+def lite(yaml_file: str|Path, method_string: str=None, *args, **kwargs) -> Any:
 
     yaml_file = Path(yaml_file)
     sys.path.append(str(Path.cwd()))
@@ -95,7 +103,7 @@ def run(yaml_file: str|Path, method_string: str=None, *args, **kwargs) -> Any:
         return object, None
 
 def main():
-    return Fire(run)
+    return Fire(lite)
 
 if __name__ == '__main__':
     main()
