@@ -1,6 +1,9 @@
 # added
 data
-/logs
+test*
+test/
+logs/
+archive/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
