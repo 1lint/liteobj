@@ -4,8 +4,10 @@ from setuptools import setup
 repo_name = 'liteobj'
 
 __version__ = None
+version_statement = "\n"
 with open(f"{repo_name}/__init__.py", "r") as f:
-    version_statement = f.readline()
+    while version_statement == "\n":
+        version_statement = f.readline()
 
 exec(version_statement)
 
